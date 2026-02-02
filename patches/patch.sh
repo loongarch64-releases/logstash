@@ -8,19 +8,23 @@ patch_ver=$(echo "$version" | cut -d. -f3)
 
 echo "patching ..."
 
-# 替换 jdk
-if [ "$major_ver" -ge 8 ]; then
-    JAVA_HOME="/usr/lib/jvm/java-17-openjdk"
-elif [ "$major_ver" -eq 7 ] || ([ "$major_ver" -eq 6 ] && [ "$minor_ver" -ge 7 ]); then
-    JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
+# 替换 jdk,均使用所支持的最高long-term版本
+if [ "$major_ver" -gt 8 ] || ([ "$major_ver" -eq 8 ] && [ "$minor_ver" -ge 14 ]); then
+    JDK_VER=21
+elif [ "$major_ver" -gt 7 ] || ([ "$major_ver" -eq 7 ] && [ "$minor_ver" -ge 16 ]); then
+    JDK_VER=17
+elif [ "$major_ver" -gt 6 ] || ([ "$major_ver" -eq 6 ] && [ "$minor_ver" -ge 7 ]); then
+    JDK_VER=11
 else
-    JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk"
+    JDK_VER=1.8.0
 fi
-cp -rL $JAVA_HOME/. $src/jdk/
+JAVA_HOME="/usr/lib/jvm/java-$JDK_VER-openjdk"
+cp -rL "$JAVA_HOME/." "$src/jdk/"
 
 # 替换 jruby  jruby从9.3.10.0开始支持loongarch，最早使用该版本的logstash为v8.6.2，
 # 故此前的版本均将jruby替换为和v8.6.2一致，尽可能减少差异
-if [ "$major_ver" -lt 8 ] || ([ "$major_ver" -eq 8 ] && [ "$minor_ver" -lt 6 ]) ||
+if [ "$major_ver" -lt 8 ] ||
+  ([ "$major_ver" -eq 8 ] && [ "$minor_ver" -lt 6 ]) ||
   ([ "$major_ver" -eq 8 ] && [ "$minor_ver" -eq 6 ] && [ "$patch_ver" -le 1 ]); then
     jruby_tar=jruby-dist-9.3.10.0-bin.tar.gz
     wget https://repo1.maven.org/maven2/org/jruby/jruby-dist/9.3.10.0/$jruby_tar
