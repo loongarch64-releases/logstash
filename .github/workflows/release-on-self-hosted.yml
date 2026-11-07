@@ -1,6 +1,8 @@
 name: Auto Build logstash (Self-hosted)
 
 on:
+  schedule:
+    - cron: '20 14 * * *'
   workflow_dispatch:
 
 env:
